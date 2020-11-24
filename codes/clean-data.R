@@ -13,7 +13,7 @@ pop <- read_csv('data/raw/pop_raw.csv')
 glimpse( cv )
 
 # Drop not needed variables
-cv <- cv %>% select( -c( FIPS,Admin2,Last_Update,Lat,Long_,Combined_Key,Incidence_Rate,Case.Fatality_Ratio))
+cv <- cv %>% select( -c( FIPS,Admin2,Last_Update,Lat,Long_,Combined_Key,Incidence_Rate,`Case-Fatality_Ratio`))
 
 # One observation to be one country
 # Check e.g. China:
