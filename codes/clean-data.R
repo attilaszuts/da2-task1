@@ -22,7 +22,7 @@ cv %>% filter( Country_Region == 'China')
 # Create new data table now only contains the countries
 cv2 <- cv %>% 
   group_by( Country_Region ) %>% 
-  summarise_if(is.numeric,lst( sum ) )
+  summarise_if(is.numeric,lst( sum ), na.rm = T )
 
 # Rename variables
 cv2 <- cv2 %>% rename( country   = Country_Region ,
