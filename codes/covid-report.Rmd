@@ -1,0 +1,25 @@
+---
+title: "COVID-19 cases and deaths"
+author: "Attila Szuts"
+date: "28/11/2020"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: true
+    number_sections: true
+---
+
+# Introduction
+
+# Histogram and summary statistics
+
+# Variable transformations
+
+# Model of choice: 
+
+# Hypothesis testing and residual analysis
+
+# Executive summary
+
+# Appendix
