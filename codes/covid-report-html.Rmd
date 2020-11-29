@@ -2,8 +2,8 @@
 title: "COVID-19 cases and deaths"
 author: "Attila Szuts"
 date: "28/11/2020"
-output: 
-  pdf_document:
+output:
+  prettydoc::html_pretty:
     toc: true
     number_sections: true
 editor_options: 
@@ -15,7 +15,6 @@ library(tidyverse); library(estimatr); library(scales); library(lspline); librar
 # read in data 
 df <- read_csv('data/clean/covid_pop_clean.csv')
 ```
-\newpage
 
 # Executive summary
 
@@ -30,7 +29,7 @@ The population of my analysis are the world's countries during the pandemic and 
 
 In the histograms below we can see all of our variables are skewed to the left, having a long right tail. These extreme values are not measurement errors, but are in fact countries with extremely high numbers of COVID-19 cases. These countries include Brazil, India, and the United states with the top 3 number of confirmed cases; Brazil, India and Mexico with the top 3 number of deaths. These extreme values could be due to a number of factors, including higher than average population, population density and lack of counter-pandemic measures.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.2}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 # check histograms and extreme values
 df %>%
   select(confirmed, death, population) %>% 
@@ -90,6 +89,9 @@ reg3 <- lm_robust(ln_death ~ lspline(ln_cases, ln_cutoff), data = df)
 reg4 <- lm_robust(ln_death ~ ln_cases, data = df, weights = population)
 ```
 
+
+
+
 # Hypothesis testing and residual analysis
 
 Next, I would like to investigate, if the true $\beta$ is 0 or not, or said otherwise: if there is a true relationship between our $x$ and $y$. So for this I set up the following hypothesis test:
@@ -129,7 +131,7 @@ The largest positive deviance from the predicted value is found in `r u1[[1,1]]`
 
 ## Transforming variables
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height=4}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # loess 
 df %>% 
@@ -173,7 +175,6 @@ df %>%
   theme_bw()
 ```
 
-\newpage
 
 ## Estimating different models
 
@@ -248,7 +249,7 @@ df %>%
   theme_bw() 
 ```
 
-\newpage
+
 ## Investigating biggest residuals
 
 ```{r include=FALSE}
