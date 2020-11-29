@@ -16,7 +16,8 @@ df %>%
   facet_wrap(~key, scales = "free", nrow = 1) +
   geom_histogram() +
   labs(x = 'Variable values', y = 'Absolute Frequency', title = 'Histogram of numeric variables in dataset') + 
-  theme_classic()
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) 
 
 df %>% 
   filter(active > 200000)
@@ -40,6 +41,12 @@ summary(df)
 
 df0 <- df 
 
+# countries without deaths
+df0 %>% 
+  filter(confirmed == 0 | death == 0) %>% 
+  arrange(desc(confirmed))
+  
+
 df <- df %>% 
   filter(death != 0 & confirmed != 0)
 
@@ -48,8 +55,8 @@ df <- df %>%
 # loess 
 df %>% 
   ggplot(aes(confirmed, death)) + 
-  geom_point() +
-  geom_smooth(method = "loess") +
+  geom_point(color = 'purple', shape = 16, show.legend = F, alpha = 0.6) +
+  geom_smooth(method = "loess", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases', 
        y = 'Number of COVID-19 deaths',
        title = 'COVID-19 cases and deaths') +
@@ -57,8 +64,8 @@ df %>%
 
 df %>% 
   ggplot(aes(confirmed, death)) + 
-  geom_point() +
-  geom_smooth(method = "loess") +
+  geom_point(color = 'purple', shape = 16, show.legend = F, alpha = 0.6) +
+  geom_smooth(method = "loess", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths',
        title = 'COVID-19 cases and deaths') +
@@ -67,8 +74,8 @@ df %>%
 
 df %>% 
   ggplot(aes(confirmed, death)) + 
-  geom_point() +
-  geom_smooth(method = "loess") +
+  geom_point(color = 'purple', shape = 16, show.legend = F, alpha = 0.6) +
+  geom_smooth(method = "loess", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases', 
        y = 'Number of COVID-19 deaths, log transformed',
        title = 'COVID-19 cases and deaths') +
@@ -77,8 +84,8 @@ df %>%
 
 df %>% 
   ggplot(aes(confirmed, death)) + 
-  geom_point() +
-  geom_smooth(method = "loess") +
+  geom_point(color = 'purple', shape = 16, show.legend = F, alpha = 0.6) +
+  geom_smooth(method = "loess", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths, log transformed',
        title = 'COVID-19 cases and deaths') +
@@ -112,7 +119,8 @@ df %>%
   geom_smooth(method = "lm", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths, log transformed',
-       title = 'COVID-19 cases and deaths') +
+       title = 'COVID-19 cases and deaths',
+       subtitle = 'Simple linear regression') +
   theme_bw() 
 
 
@@ -126,7 +134,8 @@ df %>%
   geom_smooth(method = "lm", formula = y ~ poly(x,2), color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths, log transformed',
-       title = 'COVID-19 cases and deaths') +
+       title = 'COVID-19 cases and deaths',
+       subtitle = 'Quadratic linear regression') +
   theme_bw() 
 
 # reg3 - PLS
@@ -141,7 +150,8 @@ df %>%
   geom_smooth(formula = y ~ lspline(x, ln_cutoff), method = "lm", color = 'green') +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths, log transformed',
-       title = 'COVID-19 cases and deaths') +
+       title = 'COVID-19 cases and deaths',
+       subtitle = 'PLS') +
   geom_vline(xintercept = ln_cutoff, linetype = 'dotted') + 
   theme_bw() 
 
@@ -156,7 +166,8 @@ df %>%
   scale_size(range = c(1, 15)) +
   labs(x = 'Number of confirmed COVID-19 cases, log transformed', 
        y = 'Number of COVID-19 deaths, log transformed',
-       title = 'COVID-19 cases and deaths') +
+       title = 'COVID-19 cases and deaths',
+       subtitle = 'Weighted OLS') +
   theme_bw() 
 
 
@@ -167,6 +178,7 @@ data_out <- 'out/'
 htmlreg(list(reg1 , reg2 , reg3 , reg4),
         type = 'html',
         custom.model.names = c("Simple linear","Quadratic linear","PLS", "Weighted OLS"),
+        custom.coef.names = c('Intercept', 'ln(cases)', 'ln(cases)^2', 'ln(cases<339062.1)', 'ln(cases>=339062.1)'),
         caption = "Modelling case fatality and confirmed COVID-19 cases",
         file = paste0( data_out ,'model_comparison.html'), 
         include.ci = FALSE)
@@ -196,4 +208,3 @@ df %>% top_n( -5 , reg1_res ) %>%
 df %>% top_n( 5 , reg1_res ) %>% 
   select( country , confirmed, death , reg1_y_pred_exp, reg1_y_pred , ln_death , reg1_res ) %>% 
   arrange(desc(reg1_res))
-
