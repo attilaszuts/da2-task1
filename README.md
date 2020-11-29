@@ -2,7 +2,7 @@
 
 This is the main project folder for the analysis. Please open the  `da2-task1.Rproj` file, to access the analysis.
 
-The GitHub repository can be accessed [here](https://github.com/szutsattila/da2-task1)
+The GitHub repository can be accessed [here](https://github.com/szutsattila/da2-task1).
 
 ## Folder structure
 
