@@ -10,11 +10,13 @@ df <- read_csv('data/clean/covid_pop_clean.csv')
 
 # check histograms and extreme values
 df %>%
-  keep(is.numeric) %>% 
+  select(confirmed, death, population) %>% 
   gather() %>% 
   ggplot(aes(value)) +
-  facet_wrap(~key, scales = "free") +
-  geom_histogram()
+  facet_wrap(~key, scales = "free", nrow = 1) +
+  geom_histogram() +
+  labs(x = 'Variable values', y = 'Absolute Frequency', title = 'Histogram of numeric variables in dataset') + 
+  theme_classic()
 
 df %>% 
   filter(active > 200000)
@@ -26,7 +28,7 @@ df %>%
   filter(death > 50000)
 
 df %>% 
-  filter(population > 1000000)
+  filter(population > 1000000000)
 
 df %>% 
   filter(recovered > 2000000)
@@ -39,7 +41,7 @@ summary(df)
 df0 <- df 
 
 df <- df %>% 
-  filter(death != 0)
+  filter(death != 0 & confirmed != 0)
 
 # scatterplots
 

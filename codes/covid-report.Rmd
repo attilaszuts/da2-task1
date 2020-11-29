@@ -4,22 +4,112 @@ author: "Attila Szuts"
 date: "28/11/2020"
 output:
   prettydoc::html_pretty:
-    theme: cayman
-    highlight: github
     toc: true
     number_sections: true
+editor_options: 
+  chunk_output_type: console
 ---
 
-# Introduction
-
-# Histogram and summary statistics
-
-# Variable transformations
-
-# Model of choice: 
-
-# Hypothesis testing and residual analysis
+```{r include=FALSE}
+library(tidyverse); library(estimatr); library(scales); library(lspline); library(texreg); library(car)
+# read in data 
+df <- read_csv('data/clean/covid_pop_clean.csv')
+```
 
 # Executive summary
 
+- main results
+- what are the variables
+- how does the pattern of association look like
+- what models i use
+- what is the main message of my model
+- what would strengthen and what would weaken my results
+
+# Introduction
+
+In this report I am going to analyse the pattern of association between confirmed COVID-19 cases and deaths on a given death on a country level. Numbers on confirmed cases and deaths were collected by the Center for Systems Science and Engineering at Johns Hopkins University. Population data for each country was downloaded from the World Bank's site. 
+The population of my analysis are the world's countries during the pandemic. Data quality can vary from country to country depending on the countries' healthcare system's level of sophistication.
+
+# Histogram and summary statistics
+
+In the histograms below we can see all of our variables are skewed to the left, having a long right tail. These extreme values are not measurement errors, but are in fact countries with extremely high numbers of COVID-19 cases. These countries include Brazil, India, and the United states with the top 3 number of confirmed cases Brazil, India and Mexico with the top 3 number of deaths. These extreme values could be due to a number of factors, including higher than average population, population density and lack of counter-pandemic measures.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# check histograms and extreme values
+df %>%
+  select(confirmed, death, population) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+  facet_wrap(~key, scales = "free", nrow = 1) +
+  geom_histogram() +
+  labs(x = 'Variable values', y = 'Absolute Frequency', title = 'Histogram of numeric variables in dataset') + 
+  theme_classic()
+```
+
+
+# Variable transformations
+
+Since we would like to model percentage differences with this analysis (for countries that have higher number of cases, how will the average number of deaths change), it would make sense to transform our $x$ and $y$ variables logarithmically (if it also makes sense from a statistical point of view). To investigate this question, I plotted our data on a scatterplot and used the previous histograms and summary statistics to establish, that indeed the clearest linear pattern of association emerges when both the predictor and outcome variable is transformed. Also, my data is cross-sectional and taking logs of variables we can solve the lack of baseline for comparison. 
+
+Because of log transformations, I had to exclude countries, where the number of confirmed cases or deaths were 0.
+
+```{r include=FALSE}
+# excluding cases where there are no deaths, as the log of 0 is not interpretable.
+df <- df %>% 
+  filter(death != 0 & confirmed != 0)
+# create log transformed variables
+df <- df %>% 
+  mutate(ln_cases = log(confirmed),
+         ln_death = log(death),
+         ln_cases_sq = ln_cases ^ 2)
+```
+
+# Model of choice: simple linear regression
+
+In my analysis I used different models to try to uncover the pattern of association between confirmed cases and deaths and to try to find the model that can explain the most variance in my data while also being easily interpreted. Because of these reasons I chose the simple linear regression that I am going to introduce in the following section. The formula for this model is: 
+
+$$ln(\text{deaths}) = \alpha + \beta \times ln(\text{cases})$$
+$$\alpha = -4.272$$
+$$\beta = 1.031$$
+These parameters can be interpreted as the number of deaths is higher 1.031% on average for observations with 1% higher confirmed cases. The intercept ($\alpha$) means, that when there is only one confirmed case the average of the log of deaths is -4.272 (which is meaningless in this context).
+
+# Hypothesis testing and residual analysis
+
+Next, I would like to investigate, if the true $\beta$ is 0 or not, or said otherwise: if there is a true relationship between our $x$ and $y$. So for this I set up the following hypothesis test:
+$$H_0 : \beta_{true}=0, \space H_A : \beta_{true}\neq 0$$
+```{r include=FALSE}
+## hypothesis testing
+# simple linear regression
+reg1 <- lm_robust(ln_death ~ ln_cases, data = df)
+# hypothesis testing
+linearHypothesis( reg1 , "ln_cases = 0")
+
+## residual analysis
+# Get the predicted y values from the model
+df$reg1_y_pred <- reg1$fitted.values
+# Calculate the errors of the model
+df$reg1_res <- df$ln_death - df$reg1_y_pred 
+# calculate the predicted number of deaths (inverse log transformation)
+df$reg1_y_pred_exp <- exp(df$reg1_y_pred)
+
+# Find countries with largest negative errors
+l1 <- df %>% top_n( -1 , reg1_res ) %>% 
+  select( country , confirmed, death , reg1_y_pred_exp, reg1_y_pred , ln_death , reg1_res ) %>% 
+  arrange(reg1_res)
+
+# Find countries with largest positive errors
+u1 <- df %>% top_n( 1 , reg1_res ) %>% 
+  select( country , confirmed, death , reg1_y_pred_exp, reg1_y_pred , ln_death , reg1_res ) %>% 
+  arrange(desc(reg1_res))
+```
+
+The estimated t-statistics is `r round(reg1$statistic[2],2)`, with p-value: `r format(reg1$p.value[2], digits = 3, scientific = 5)`, which means our test is significant at 1%. Thus I reject the $H_0$, which means the confirmed cases is not uncorrelated with the number of deaths.
+
+Next, I investigated the residuals: 
+
+The largest negative deviance from the predicted value is found in `r l1[[1,1]]` with predicted number of deaths of `r round(l1[[1,4]],0)`, but the real value is only `r round(l1[[1,3]],0)`. This means, that in Singapore the situation is better, than the model would predict based on the number of active cases.
+The largest positive deviance from the predicted value is found in `r u1[[1,1]]` with predicted number of deaths `r round(u1[[1,4]],0)`, but the real value is `r round(u1[[1,3]],0)`. This means, that in Yemen, the situation is worse, than the model would predict based on the number of active cases.
+
 # Appendix
+
+## Estimating different models
